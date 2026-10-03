@@ -322,16 +322,23 @@ body {
     fx.globalAlpha = 1; fx.globalCompositeOperation = 'source-over';
   }
 
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var altar = document.querySelector('.altar');
+  function glow(t) {
+    var p = .5 + .5 * Math.sin(t * 1.1);
+    altar.style.boxShadow = '0 0 ' + (60 + 30 * p) + 'px ' + (10 + 8 * p) + 'px rgba(255,222,140,' + (.45 + .2 * p) + '), 0 24px 60px rgba(30,30,50,.4)';
+  }
+  var capture = /[?&]capture/.test(location.search);
+  window.__renderAt = function (t) { drawBg(t); drawFg(t); glow(t); };
+  var reduce = capture || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   var t0 = performance.now();
-  function frame(now) { var t = (now - t0) / 1000; drawBg(t); drawFg(t); if (!reduce) requestAnimationFrame(frame); }
+  function frame(now) { var t = (now - t0) / 1000; drawBg(t); drawFg(t); glow(t); if (!reduce) requestAnimationFrame(frame); }
   function start() { resize(); if (reduce) { drawBg(2); drawFg(2); } else requestAnimationFrame(frame); }
   var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { resize(); if (reduce) { drawBg(2); drawFg(2); } }, 80); });
   start();
 
   /* pantalla completa */
   var btn = document.getElementById('fs');
-  if (!stage.requestFullscreen) btn.hidden = true;
+  if (!stage.requestFullscreen || capture) btn.hidden = true;
   btn.addEventListener('click', function () {
     try {
       if (document.fullscreenElement) { var p = document.exitFullscreen(); if (p && p.catch) p.catch(function () {}); }
