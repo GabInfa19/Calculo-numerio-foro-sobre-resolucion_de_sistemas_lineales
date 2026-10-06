@@ -1,0 +1,5 @@
+Ventana | Ancho nulo-nulo (x1/N) | Ancho 3dB (x1/N) | Lobulo sec. (dB)
+Rectangular | 2.00 | 0.88 | -13.3
+Hanning | 4.06 | 1.46 | -31.5
+Hamming | 4.14 | 1.31 | -42.4
+Blackman | 6.10 | 1.67 | -58.1
