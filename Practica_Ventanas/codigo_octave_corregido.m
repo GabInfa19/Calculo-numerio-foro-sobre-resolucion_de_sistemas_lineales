@@ -259,11 +259,62 @@ for i = 1:4
     grid on; hold off;
 
     % Margen: cuantos dB sobresale el pico de la debil (cerca de w2) por
-    % encima de la fuga de la fuerte en esa misma frecuencia. Mientras mas
-    % grande, mas facil es ver la sinusoide debil con esa ventana.
-    [~, k] = min(abs(w - w2));
+    % encima del MAXIMO de la fuga de la fuerte en esa misma zona (la fuga
+    % oscila entre picos y valles, por eso se compara con su maximo).
+    % Mientras mas grande, mas facil es ver la sinusoide debil.
     cerca = find(abs(w - w2) < 0.01);
-    margen = 10*log10(max(Pc(cerca))) - 10*log10(Ps(k));
+    margen = 10*log10(max(Pc(cerca))) - 10*log10(max(Ps(cerca)));
     printf('%s: la sinusoide debil sobresale %.1f dB sobre la fuga\n', nombres{i}, margen);
 end
 legend('con la debil', 'solo la fuerte (fuga)');
+
+% ---------------------------------------------------------------------
+% [CAMBIO, opcional] VALORES NUMERICOS PARA EL INFORME
+% ---------------------------------------------------------------------
+% Imprime en la consola los numeros que se citan en el informe, asi se
+% pueden reproducir con este mismo codigo.
+
+% (a) Caracteristicas de las ventanas, medidas en su espectro. Se usa una FFT
+% con mucho relleno de ceros (2^18 puntos) para leer bien los lobulos.
+%   - ancho nulo a nulo: distancia entre los dos primeros ceros del lobulo
+%     principal, en multiplos de 1/N ciclos/muestra.
+%   - ancho a -3 dB: ancho donde la magnitud cae a 0.707 del maximo.
+%   - lobulo secundario: mayor pico fuera del lobulo principal, en dB
+%     respecto al pico principal.
+NF = 2^18;
+printf('\n--- Caracteristicas de las ventanas (N = %d) ---\n', N);
+for i = 1:4
+    Wm = abs(fft(ventanas{i}, NF));
+    Wm = Wm(1:NF/2) / max(Wm);              % de 0 a pi, normalizado
+    fc = (0:NF/2-1) / NF;                   % ciclos/muestra
+    k = 2;
+    while ~(Wm(k) < Wm(k-1) && Wm(k) <= Wm(k+1))   % primer nulo
+        k = k + 1;
+    end
+    k3 = find(Wm < 10^(-3/20), 1);          % primer punto bajo -3 dB
+    printf('%-12s nulo-nulo = %.2f/N | -3 dB = %.2f/N | lobulo sec. = %.1f dB\n', ...
+        nombres{i}, 2*fc(k)*N, 2*fc(k3)*N, 20*log10(max(Wm(k:end))));
+end
+
+% (b) Experimento 1.b con ruido: piso de ruido lejos de las sinusoides
+% (frecuencias mayores que 0.6*pi rad/muestra).
+printf('\n--- Experimento 1.b con ruido: piso de ruido (w > 0.6*pi) ---\n');
+for i = 1:4
+    [Pxx, w] = periodogram(xb, ventanas{i}, Nfft);
+    zona = 10*log10(Pxx(w > 0.6*pi));
+    printf('%-12s media = %.1f dB | maximo = %.1f dB\n', nombres{i}, mean(zona), max(zona));
+end
+
+% (c) Experimento 2: cuanto se calma la estimacion al promediar.
+% Se mide la VARIANZA RELATIVA = var/media^2 de la curva (para ruido blanco la
+% DEP verdadera es constante, asi que toda variacion es error de estimacion).
+% Es independiente de la escala. Un periodograma solo da ~1; promediar K
+% segmentos sin solape deberia dar ~1/K.
+K = muestrasRuido / N;
+printf('\n--- Experimento 2: K = %d segmentos ---\n', K);
+for i = 1:4
+    P1 = periodogram(ruidoLargo(1:N), ventanas{i}, Nfft);   % un solo segmento
+    Pp = Pxx_promedios{i};                                  % promedio de K segmentos
+    printf('%-12s 1 segmento: media = %.3f, var.rel. = %.3f | promedio: media = %.3f, var.rel. = %.3f (1/K = %.3f)\n', ...
+        nombres{i}, mean(P1), var(P1)/mean(P1)^2, mean(Pp), var(Pp)/mean(Pp)^2, 1/K);
+end

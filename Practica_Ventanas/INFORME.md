@@ -48,7 +48,7 @@ Separación de frecuencias: Δf = 1/12 − 1/14 ≈ 0.0119 ciclos/muestra ≈ 1.
 Piso de ruido medio (f > 0.3) y máximo: Rectangular −2.9 dB / 5.8 dB; Hanning −5.2 / 3.0; Hamming −5.2 / 2.8; Blackman −4.5 / 3.2.
 
 **Análisis.**
-- La segunda sinusoide tiene potencia A²/2 = 5·10⁻⁵ frente a ruido de varianza 1: su pico esperado queda ≈ 80 dB por debajo del de la primera sinusoide, muy por debajo del piso de ruido (≈ 0 dB). **Con ruido de varianza 1 no es detectable con ninguna ventana**; la ventana solo cambia cómo se ve el piso de ruido (la rectangular tiene más picos espurios, hasta 5.8 dB, por su fuga espectral).
+- La segunda sinusoide está 40 dB por debajo de la primera ((A2/A1)² = 10⁻⁴); con N = 128 el pico de la primera ronda +15 dB y el de la segunda quedaría cerca de −25 dB, por debajo del piso de ruido (≈ −3 dB). **Con ruido de varianza 1 no es detectable con ninguna ventana**; la ventana solo cambia cómo se ve el piso de ruido (la rectangular tiene más picos espurios, hasta 5.8 dB, por su fuga espectral).
 - Para aislar el efecto de la ventana, se añadió la Fig. 6: la misma señal **sin ruido** (N = 512).
 
 ![Fig. 6](figuras/fig6_sin_ruido_1b.png)
