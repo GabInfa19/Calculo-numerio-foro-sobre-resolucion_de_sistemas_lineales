@@ -230,3 +230,40 @@ for i = 1:4
     ylabel('Densidad Espectral (dB)');
     grid on;
 end
+
+% ---------------------------------------------------------------------
+% [CAMBIO, opcional] EXPERIMENTO 1.b SIN RUIDO
+% ---------------------------------------------------------------------
+% Con ruido de varianza 1, la sinusoide debil (A2 = 0.01) queda ~80 dB por
+% debajo de la fuerte y el ruido se la "come": no se ve con ninguna ventana.
+% Para aislar el efecto de la VENTANA se repite el experimento SIN ruido. Asi
+% lo unico que puede tapar a la sinusoide debil es la FUGA espectral de la
+% sinusoide fuerte (los lobulos secundarios de la ventana).
+xc = A1b*sin(w1*n) + A2b*sin(w2*n);   % sin ruido
+xs = A1b*sin(w1*n);                   % solo la fuerte (para medir la fuga)
+
+figure('Name', 'Experimento 1.b sin ruido en dB');
+titulos_c = {'1.b sin ruido Rectangular (dB)', '1.b sin ruido Hanning (dB)', '1.b sin ruido Hamming (dB)', '1.b sin ruido Blackman (dB)'};
+nombres = {'Rectangular', 'Hanning', 'Hamming', 'Blackman'};
+
+for i = 1:4
+    subplot(2, 2, i);
+    [Pc, w] = periodogram(xc, ventanas{i}, Nfft);   % fuerte + debil
+    [Ps, w] = periodogram(xs, ventanas{i}, Nfft);   % solo fuerte
+    plot(w, 10*log10(Pc)); hold on;
+    plot(w, 10*log10(Ps), 'r--');     % linea roja: fuga de la fuerte sola
+    xlim([0 0.3*pi]); ylim([-120 20]);
+    title(titulos_c{i});
+    xlabel('Frecuencia (rad/muestra)');
+    ylabel('Potencia (dB)');
+    grid on; hold off;
+
+    % Margen: cuantos dB sobresale el pico de la debil (cerca de w2) por
+    % encima de la fuga de la fuerte en esa misma frecuencia. Mientras mas
+    % grande, mas facil es ver la sinusoide debil con esa ventana.
+    [~, k] = min(abs(w - w2));
+    cerca = find(abs(w - w2) < 0.01);
+    margen = 10*log10(max(Pc(cerca))) - 10*log10(Ps(k));
+    printf('%s: la sinusoide debil sobresale %.1f dB sobre la fuga\n', nombres{i}, margen);
+end
+legend('con la debil', 'solo la fuerte (fuga)');
